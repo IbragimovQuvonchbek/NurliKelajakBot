@@ -32,13 +32,12 @@ class Registration(StatesGroup):
 @dp.message(CommandStart())
 async def command_start_handler(message: types.Message) -> None:
     user = await check_exists(message.from_user.id)
-    print(message.from_user.id)
-    print(user)
     if len(user) != 0:
-        await message.answer("Siz ro'yxatdan o'tkansiz✅\nSizni 25.08.2024 sanada kutib qolamiz.\nBarcha yangiliklarni ushbu telegram kanalda e'lon qilamiz @nurlikelajakkarakul")
+        await message.answer(
+            "Siz ro'yxatdan o'tkansiz✅\nSizni 25.08.2024 sanada kutib qolamiz.\nBarcha yangiliklarni ushbu telegram kanalda e'lon qilamiz @nurlikelajakkarakul")
     else:
         builder = InlineKeyboardBuilder()
-        builder.button(text=f"📝 Ro'yxatdan o'tish", callback_data=f"registration")
+        builder.button(text=f"📝 Ro'yxatdan o'tish", callback_data=f"registration_{message.from_user.id}")
         await message.answer(
             f"Assalomu aleykum {html.bold(message.from_user.full_name)}!\nNurli Kelajak Qorako'l maktabi tashkillashtirayotgan matematika olimpiadasiga ro'yxatdan o'tish uchun ro'yxatdan o'tish tugmasini bosing.",
             reply_markup=builder.as_markup()
@@ -47,9 +46,16 @@ async def command_start_handler(message: types.Message) -> None:
 
 @dp.callback_query(lambda c: c.data.startswith("registration"))
 async def handler_registration(callback_query: types.CallbackQuery, state: FSMContext) -> None:
-    await callback_query.message.edit_text("Ro'yxatdan o'tish boshlandi")
-    await callback_query.message.answer(f"{html.bold("Ism familiyangizni")} yozib yuboring: ")
-    await state.set_state(Registration.name)
+    user_id = callback_query.data.split("_")[-1]
+    user = await check_exists(user_id)
+    print(user)
+    if len(user) != 0:
+        await callback_query.message.edit_text(
+            "Siz ro'yxatdan o'tkansiz✅\nSizni 25.08.2024 sanada kutib qolamiz.\nBarcha yangiliklarni ushbu telegram kanalda e'lon qilamiz @nurlikelajakkarakul")
+    else:
+        await callback_query.message.edit_text("Ro'yxatdan o'tish boshlandi")
+        await callback_query.message.answer(f"{html.bold("Ism familiyangizni")} yozib yuboring: ")
+        await state.set_state(Registration.name)
 
 
 @dp.message(Registration.name)
@@ -89,7 +95,8 @@ async def handler_phone(message: types.Message, state: FSMContext) -> None:
 
         response = await add_user(name, grade, phone_number, telegram_id)
         if response.get('id'):
-            await message.answer("Ro'yxatdan o'tdingiz ✅\nSizni 25.08.2024 sanada kutib qolamiz.\nBarcha yangiliklarni ushbu telegram kanalda e'lon qilamiz @nurlikelajakkarakul")
+            await message.answer(
+                "Ro'yxatdan o'tdingiz ✅\nSizni 25.08.2024 sanada kutib qolamiz.\nBarcha yangiliklarni ushbu telegram kanalda e'lon qilamiz @nurlikelajakkarakul")
             await state.clear()
         else:
             await message.answer("Tizimda nosozlik admin bilan bog'laning @nurlikelajakadmin")
